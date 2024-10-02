@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Only use the router for navigation
 import ProductList from "./components/ProductList";
 import SearchBar from "./components/searchBar";
 import SortOptions from "./components/SortOptions";
@@ -15,17 +14,25 @@ import Header from "./components/Header";
 const Loading = () => <div>Loading...</div>;
 
 export default function Home() {
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const search = searchParams.get("search") || "";
-  const sort = searchParams.get("sort") || "";
-  const category = searchParams.get("category") || "";
-  const page = parseInt(searchParams.get("page") || "1", 10);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Extract query parameters from the URL manually
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearch(params.get("search") || "");
+    setSort(params.get("sort") || "");
+    setCategory(params.get("category") || "");
+    setPage(parseInt(params.get("page") || "1", 10));
+  }, []);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -50,14 +57,16 @@ export default function Home() {
 
   const handlePagination = (newPage) => {
     if (!loading) {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(window.location.search);
       params.set("page", newPage.toString());
-      router.push(`/?${params.toString()}`);
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      router.push(newUrl); // Navigate to the new URL
+      setPage(newPage); // Update state manually
     }
   };
 
   const handleReset = () => {
-    router.push("/");
+    router.push("/"); // Reset URL to default without filters
   };
 
   return (
